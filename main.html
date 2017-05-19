@@ -1,0 +1,37 @@
+<html>
+<script>
+
+function secret (message) {
+  return function () {
+    return message;
+  }
+};
+
+const secret2 = msg => () => msg;
+
+const getFullName = ({firstName, lastName}) => {
+  const fullName = firstName + ' ' + lastName;
+  return fullName;
+};
+
+const getFullName2 = ({firstName, lastName}) => (
+  firstName + ' ' + lastName
+);
+
+const add2 = a => b => a + b;
+// Now we can define a point-free inc()
+// that adds 1 to any number.
+const inc = add2(1);
+console.log(inc(3)); // 4
+
+const g = n => n + 1;
+const f = n => n * 2;
+const compose2 = (f, g) => x => f(g(x));
+const incThenDoublePointFree = compose2(f, g);
+console.log(incThenDoublePointFree(20));
+
+const pipe = (...fns) => x => fns.reduce((acc, fn) => fn(acc), x);
+console.log(pipe(g, f)(20));
+
+</script>
+</html>

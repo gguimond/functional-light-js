@@ -1,0 +1,46 @@
+<html>
+<script>
+
+//functional function
+function foo(x,y = 2) {
+	console.log( arguments.length );
+}
+
+function bar(x,...args) {
+
+}
+
+function baz( {a,b} ) {
+	console.log( arguments.length );
+	console.log( a );
+}
+
+console.log(foo.length);				// 1
+console.log(bar.length);				// 1
+console.log(baz.length);
+
+foo(1,2);
+foo(1);
+			// 1
+
+var arr = [ 1, 2, 3, 4, 5 ];
+
+foo( ...arr );
+
+function foo2([x,y,...args]) {
+	console.log(x);
+}
+foo( [1,2,3] );
+
+baz({a : 2});
+
+function foo3() {
+	var retValue1 = 11;
+	var retValue2 = 31;
+	return [ retValue1, retValue2 ];
+}	
+var [ x, y ] = foo3();
+console.log( x + y );	
+
+</script>
+</html>
