@@ -1,0 +1,195 @@
+<html>
+<script>
+
+function partial(fn,...presetArgs) {
+	return function partiallyApplied(...laterArgs){
+		return fn( ...presetArgs, ...laterArgs );
+	};
+}
+
+var partial =
+	(fn, ...presetArgs) =>
+		(...laterArgs) =>
+			fn( ...presetArgs, ...laterArgs );
+
+function ajax(url,data,callback) {
+	// ..
+	console.log(data, callback);
+	callback(data);
+}
+
+var getPerson = partial( ajax, "http://some.api/person" );
+
+var getOrder = partial( ajax, "http://some.api/order" );
+
+var getCurrentUser = partial( getPerson, { user: "userid" } );
+
+var getPerson = ajax.bind( null, "http://some.api/person" );
+
+getPerson({}, () => {});
+
+var reverseArgs =
+	fn =>
+		(...args) =>
+			fn( ...args.reverse() );
+
+function partialRight( fn, ...presetArgs ) {
+	return reverseArgs(
+		partial( reverseArgs( fn ), ...presetArgs.reverse() )
+	);
+}
+
+var cacheResult = partialRight( ajax, function onResult(obj){
+	console.log(obj);
+});
+
+cacheResult( "http://some.api/person", { user: "userid" } );
+
+//currying
+//strict
+var curry =
+	(fn, arity = fn.length, nextCurried) =>
+		(nextCurried = prevArgs =>
+			nextArg => {
+				var args = prevArgs.concat( [nextArg] );
+
+				if (args.length >= arity) {
+					return fn( ...args );
+				}
+				else {
+					return nextCurried( args );
+				}
+			}
+		)( [] );
+
+var curriedAjax = curry( ajax );
+
+var personFetcher = curriedAjax( "http://some.api/person" );
+
+var getCurrentUser = personFetcher( { user: "userid" } );
+
+getCurrentUser( function foundUser(user){ console.log("curry"); } );
+
+//loose
+var looseCurry =
+	(fn, arity = fn.length, nextCurried) =>
+		(nextCurried = prevArgs =>
+			(...nextArgs) => {
+				var args = prevArgs.concat( nextArgs );
+
+				if (args.length >= arity) {
+					return fn( ...args );
+				}
+				else {
+					return nextCurried( args );
+				}
+			}
+		)( [] );
+
+
+getCurrentUser( function foundUser(user){ console.log("curry"); } );
+
+var uncurry =
+	fn =>
+		(...args) => {
+			var ret = fn;
+
+			for (var i = 0; i < args.length; i++) {
+				ret = ret( args[i] );
+			}
+
+			return ret;
+		};
+
+var uncurriedAjax = uncurry( curriedAjax );
+uncurriedAjax("http://some.api/person" , {}, () => console.log("uncurried"));
+
+var unary =
+	fn =>
+		arg =>
+			fn( arg );
+
+["1","2","3"].map( unary( parseInt ) );
+
+var identity =
+	v =>
+		v;
+
+var constant =
+	v =>
+		() =>
+			v;
+
+var spreadArgs =
+	fn =>
+		argsArr =>
+			fn( ...argsArr );
+
+var gatherArgs =
+	fn =>
+		(...argsArr) =>
+			fn( argsArr );
+
+function curryProps(fn,arity = 1) {
+	return (function nextCurried(prevArgsObj){
+		return function curried(nextArgObj = {}){
+			var [key] = Object.keys( nextArgObj );
+			var allArgsObj = Object.assign( {}, prevArgsObj, { [key]: nextArgObj[key] } );
+
+			if (Object.keys( allArgsObj ).length >= arity) {
+				return fn( allArgsObj );
+			}
+			else {
+				return nextCurried( allArgsObj );
+			}
+		};
+	})( {} );
+}
+
+function spreadArgProps(
+	fn,
+	propOrder =
+		fn.toString()
+		.replace( /^(?:(?:function.*\(([^]*?)\))|(?:([^\(\)]+?)\s*=>)|(?:\(([^]*?)\)\s*=>))[^]+$/, "$1$2$3" )
+		.split( /\s*,\s*/ )
+		.map( v => v.replace( /[=\s].*$/, "" ) )
+) {
+	return function spreadFn(argsObj) {
+		return fn( ...propOrder.map( k => argsObj[k] ) );
+	};
+}
+
+function bar(x,y,z) {
+	console.log( `x:${x} y:${y} z:${z}` );
+}
+
+var f3 = curryProps( spreadArgProps( bar ), 3 );
+
+f3( {y: 2} )( {x: 1} )( {z: 3} )
+
+var when =
+	(predicate,fn) =>
+		(...args) =>
+			predicate( ...args ) ? fn( ...args ) : undefined;
+
+var not =
+	predicate =>
+		(...args) =>
+			!predicate( ...args );
+
+function output(msg) {
+	console.log( msg );
+}
+
+function isShortEnough(str) {
+	return str.length <= 5;
+}
+
+var isLongEnough = not( isShortEnough );
+
+var printIf = uncurry( partialRight( when, output ) );
+
+printIf( isShortEnough, "yep" );
+
+</script>
+</html>
