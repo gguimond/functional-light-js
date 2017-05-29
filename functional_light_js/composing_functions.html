@@ -1,0 +1,169 @@
+<html>
+<script>
+
+function words(str) {
+	return String( str )
+		.toLowerCase()
+		.split( /\s|\b/ )
+		.filter( function alpha(v){
+			return /^[\w]+$/.test( v );
+		} );
+}
+
+function unique(list) {
+	var uniqList = [];
+
+	for (var i = 0; i < list.length; i++) {
+		// value not yet in the new list?
+		if (uniqList.indexOf( list[i] ) === -1 ) {
+			uniqList.push( list[i] );
+		}
+	}
+
+	return uniqList;
+}
+
+var compose2 =
+	(fn2,fn1) =>
+		origValue =>
+			fn2( fn1( origValue ) );
+
+var uniqueWords = compose2( unique, words );
+
+console.log(uniqueWords("toto toto"));
+
+var compose =
+	(...fns) =>
+		result => {
+			var list = fns.slice();
+
+			while (list.length > 0) {
+				// take the last function off the end of the list
+				// and execute it
+				result = list.pop()( result );
+			}
+
+			return result;
+		};
+
+function skipShortWords(list) {
+	var filteredList = [];
+
+	for (var i = 0; i < list.length; i++) {
+		if (list[i].length > 4) {
+			filteredList.push( list[i] );
+		}
+	}
+
+	return filteredList;
+}
+
+var biggerWords = compose( skipShortWords, unique, words );
+
+console.log(biggerWords("toto toto"));
+
+var partial =
+	(fn, ...presetArgs) =>
+		(...laterArgs) =>
+			fn( ...presetArgs, ...laterArgs );
+
+var reverseArgs =
+	fn =>
+		(...args) =>
+			fn( ...args.reverse() );
+
+function partialRight( fn, ...presetArgs ) {
+	return reverseArgs(
+		partial( reverseArgs( fn ), ...presetArgs.reverse() )
+	);
+}
+
+var filterWords = partialRight( compose, unique, words );
+var biggerWords2 = filterWords( skipShortWords );
+
+console.log(biggerWords2("toto toto"));
+
+var composeReduce = (...fns) =>
+	result =>
+		fns.reverse().reduce(
+			(result,fn) =>
+				fn( result )
+			, result
+		);
+
+var composeReduce2 =
+	(...fns) =>
+		fns.reverse().reduce( (fn1,fn2) =>
+			(...args) =>
+				fn2( fn1( ...args ) )
+		);
+
+var composeRecursive =
+	(...fns) => {
+		// pull off the last two arguments
+		var [ fn1, fn2, ...rest ] = fns.reverse();
+
+		var composedFn =
+			(...args) =>
+				fn2( fn1( ...args ) );
+
+		if (rest.length == 0) return composedFn;
+
+		return composeRecursive( ...rest.reverse(), composedFn );
+	};
+
+var biggerWordsR = composeRecursive( skipShortWords, unique, words );
+console.log(biggerWordsR("toto toto totootto"));
+
+function pipe(...fns) {
+	return function piped(result){
+		var list = fns.slice();
+
+		while (list.length > 0) {
+			// take the first function from the list
+			// and execute it
+			result = list.shift()( result );
+		}
+
+		return result;
+	};
+}
+
+var pipe = reverseArgs( compose );
+
+var biggerWordsPipe = pipe( words, unique, skipShortWords );
+console.log(biggerWordsPipe("toto toto totootto"));
+
+var prop =
+	(name,obj) =>
+		obj[name];
+
+var setProp =
+	(name,obj,val) => {
+		var o = Object.assign( {}, obj );
+		o[name] = val;
+		return o;
+	}
+var makeObjProp =
+	(name,value) =>
+		setProp( name, {}, value );
+
+var extractName = partial( prop, "name" );
+var setName = partial( makeObjProp, "name" );
+var print = (s) => console.log(s)
+var printName = compose(print, extractName)
+
+var execCb = (cb) => {
+	cb({ "name" : "foo" });
+}
+
+execCb(
+	compose(
+		printName,
+		setName,
+		extractName
+	)
+);
+
+</script>
+</html>
