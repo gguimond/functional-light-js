@@ -1,0 +1,45 @@
+<html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.1/immutable.min.js"></script>
+<script>
+
+function addValue(arr) {
+	var newArr = [ ...arr, 4 ];
+	return newArr;
+}
+
+console.log(addValue( [1,2,3] ));	// [1,2,3,4]
+
+
+function updateLastLogin(user) {
+	var newUserRecord = Object.assign( {}, user );
+	newUserRecord.lastLogin = Date.now();
+	return newUserRecord;
+}
+
+var user = {
+	// ..
+};
+
+user = updateLastLogin( user );
+console.log(user);
+
+var x = Object.freeze( [ 2, 3, [4, 5] ] );
+
+// not allowed:
+x[0] = 42;
+
+// oops, still allowed:
+x[2][0] = 42;
+
+console.log(x);
+
+var map1 = Immutable.Map({ a: 1, b: 2, c: 3 });
+var map2 = map1.set('b', 50);
+console.log(map1.get('b')); // 2
+console.log(map2.get('b')); // 50
+
+
+
+
+</script>
+</html>
