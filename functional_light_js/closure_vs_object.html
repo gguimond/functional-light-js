@@ -1,0 +1,141 @@
+<html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.1/immutable.min.js"></script>
+<script>
+
+var person = {
+	name: "Kyle Simpson",
+	address: {
+		street: "123 Easy St",
+		city: "JS'ville",
+		state: "ES"
+	}
+};
+
+console.log(person);
+
+function outer() {
+	var name = "Kyle Simpson";
+	return middle();
+
+	// ********************
+
+	function middle() {
+		var street = "123 Easy St";
+		var city = "JS'ville";
+		var state = "ES";
+
+		return function inner(){
+			return [name,street,city,state];
+		};
+	}
+}
+
+var person = outer();
+
+console.log(person);
+
+function person2(name,age) {
+	return function happyBirthday(){
+		age++;
+		console.log(
+			"Happy " + age + "th Birthday, " + name + "!"
+		);
+	}
+}
+
+var birthdayBoy = person2( "Kyle", 36 );
+
+birthdayBoy();
+
+var birthdayBoy = {
+	name: "Kyle",
+	age: 36,
+	happyBirthday() {
+		this.age++;
+		console.log(
+			"Happy " + this.age + "th Birthday, " + this.name + "!"
+		);
+	}
+};
+
+birthdayBoy.happyBirthday();
+// Happy 37th Birthday, Kyle!
+
+function trackEvent(
+	evt,
+	keypresses = {
+			list() { return []; },
+			forEach() {}
+		}
+) {
+
+	return {
+		list() {
+			return [ ...keypresses.list(), evt ];
+		},
+		forEach(fn) {
+			keypresses.forEach( fn );
+			fn( evt );
+		}
+	};
+}
+
+var keypresses = trackEvent({"test" : "test"})
+
+console.log(keypresses.list());		// [ evt, evt, .. ]
+
+function recordKeypress(keypressEvt) {
+	// database utility
+	console.log( "keypress-events", keypressEvt );
+}
+
+keypresses.forEach( recordKeypress );
+
+var a = [ 1, 2, 3 ];
+
+var b = a.slice();
+b.push( 4 );
+
+var o = {
+	x: 1,
+	y: 2
+};
+
+// in ES2017+, using object spread:
+/*var p = { ...o };
+p.y = 3;*/
+
+// in ES2015+:
+var p = Object.assign( {}, o );
+p.y = 3;
+
+function StudentRecord(name,major,gpa) {
+	return function printStudent(){
+		return `${name}, Major: ${major}, GPA: ${gpa.toFixed(1)}`;
+	};
+}
+
+var student = StudentRecord( "Kyle Simpson", "CS", 4 );
+
+// later
+
+console.log(student());
+// Kyle Simpson, Major: CS, GPA: 4.0
+
+function StudentRecord2(){
+	return `${this.name}, Major: ${this.major}, GPA: ${this.gpa.toFixed(1)}`;
+}
+
+var student = StudentRecord2.bind( {
+	name: "Kyle Simpson",
+	major: "CS",
+	gpa: 4
+} );
+
+// later
+
+console.log(student());
+// Kyle Simpson, Major: CS, GPA: 4.0
+
+</script>
+</html>
