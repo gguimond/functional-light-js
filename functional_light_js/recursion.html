@@ -1,0 +1,142 @@
+<html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.1/immutable.min.js"></script>
+<script>
+"use strict";
+
+function sum(total,...nums) {
+	for (var i = 0; i < nums.length; i++) {
+		total = total + nums[i];
+	}
+
+	return total;
+}
+
+// vs
+
+function sumR(num1,...nums) {
+	if (nums.length == 0) return num1;
+	return num1 + sum( ...nums );
+}
+
+function maxEven(...nums) {
+	var num = -Infinity;
+
+	for (var i = 0; i < nums.length; i++) {
+		if (nums[i] % 2 == 0 && nums[i] > num) {
+			num = nums[i];
+		}
+	}
+
+	if (num !== -Infinity) {
+		return num;
+	}
+}
+
+function maxEvenR(num1,...restNums) {
+	var maxRest = restNums.length > 0 ?
+			maxEven( ...restNums ) :
+			undefined;
+
+	return (num1 % 2 != 0 || num1 < maxRest) ?
+		maxRest :
+		num1;
+}
+
+console.log(maxEvenR(1,2,3,4));
+
+function depth(node) {
+	if (node) {
+		var depthLeft = depth( node.left );
+		var depthRight = depth( node.right );
+		return 1 + max( depthLeft, depthRight );
+	}
+
+	return 0;
+}
+
+//Proper Tail Calls
+//return foo( .. );
+
+function sumRec(result,num1,...nums) {
+	result = result + num1;
+	if (nums.length == 0) return result;
+	return sum( result, ...nums );
+}
+
+function sum(...nums) {
+	return sumRec( /*initialResult=*/0, ...nums );
+}
+
+function sumhide(...nums) {
+	return sumRec( /*initialResult=*/0, ...nums );
+
+	function sumRec(result,num1,...nums) {
+		result = result + num1;
+		if (nums.length == 0) return result;
+		return sumRec( result, ...nums );
+	}
+}
+
+var sumProperTail = (function IIFE(){
+
+	return function sum(...nums) {
+		return sumRec( /*initialResult=*/0, ...nums );
+	}
+
+	function sumRec(result,num1,...nums) {
+		result = result + num1;
+		if (nums.length == 0) return result;
+		return sumRec( result, ...nums );
+	}
+
+})();
+
+console.log(sumProperTail(1,2,3));
+
+function sumBest(result,num1,...nums) {
+	result = result + num1;
+	if (nums.length == 0) return result;
+	return sum( result, ...nums );
+}
+
+function maxEvenPTC(num1,num2,...nums) {
+	num1 =
+		(num1 % 2 == 0 && !(maxEven( num2 ) > num1)) ?
+			num1 :
+			(num2 % 2 == 0 ? num2 : undefined);
+
+	return nums.length == 0 ?
+		num1 :
+		maxEven( num1, ...nums )
+}
+
+//trampoline
+function trampoline(fn) {
+	return function trampolined(...args) {
+		var result = fn( ...args );
+
+		while (typeof result == "function") {
+			result = result();
+		}
+
+		return result;
+	};
+}
+
+var sumTramp = trampoline(
+	function sum(num1,num2,...nums) {
+		num1 = num1 + num2;
+		if (nums.length == 0) return num1;
+		return () => sum( num1, ...nums );
+	}
+);
+
+var xs = [];
+for (var i=0; i<2000; i++) {
+	xs.push( i );
+}
+
+console.log(sumTramp( ...xs ));	
+
+</script>
+</html>
