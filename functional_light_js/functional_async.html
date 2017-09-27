@@ -1,0 +1,46 @@
+<html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.1/immutable.min.js"></script>
+<script>
+
+// producer:
+
+var a = new LazyArray();
+
+setInterval( function everySecond(){
+	a.push( Math.random() );
+}, 1000 );
+
+
+// **************************
+// consumer:
+
+var b = a.map( function double(v){
+	return v * 2;
+} );
+
+b.listen( function onValue(v){
+	console.log( v );
+} );
+
+// producer:
+
+var a = new Rx.Subject();
+
+setInterval( function everySecond(){
+	a.next( Math.random() );
+}, 1000 );
+
+
+// **************************
+// consumer:
+
+var b = a.map( function double(v){
+	return v * 2;
+} );
+
+b.subscribe( function onValue(v){
+	console.log( v );
+} );
+
+</script>
+</html>
