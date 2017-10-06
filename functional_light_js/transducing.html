@@ -1,0 +1,36 @@
+<html>
+
+<script src="./transducers.js"></script>
+
+<script>
+
+function strUppercase(str) { return str.toUpperCase(); }
+function isLongEnough(str) { return str.length > 5; }
+function isShortEnough(str) { return str.length < 10; }
+function listCombination(list,val) {
+	return list.concat( [val] );
+}
+function strConcat(list,val) {
+	return list.concat( [val] );
+}
+
+console.log(transducers);
+
+var transformer = transducers.comp(
+	transducers.map( strUppercase ),
+	transducers.filter( isLongEnough ),
+	transducers.filter( isShortEnough )
+);
+
+var words = [ "You", "have", "written", "something", "very", "interesting" ];
+
+console.log(transducers.transduce( transformer, listCombination, [], words ));
+// ["WRITTEN","SOMETHING"]
+
+console.log(transducers.transduce( transformer, strConcat, "", words ));
+// WRITTENSOMETHING
+
+console.log(transducers.into( [], transformer, words ));
+
+</script>
+</html>
