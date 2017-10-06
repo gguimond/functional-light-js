@@ -1,0 +1,170 @@
+<html>
+<script src="./helpers.js"></script>
+<script>
+
+function Just(val) {
+	return { map, chain, ap, inspect };
+
+	// *********************
+
+	function map(fn) { return Just( fn( val ) ); }
+
+	// aka: bind, flatMap
+	function chain(fn) { return fn( val ); }
+
+	function ap(anotherMonad) { return anotherMonad.map( val ); }
+
+	function inspect() {
+		return `Just(${ val })`;
+	}
+}
+
+var A = Just( 10 );
+var B = A.map( v => v * 2 );
+
+console.log(B.inspect());
+
+var A = Just( 10 );
+var eleven = A.chain( v => v + 1 );
+
+console.log(eleven);			
+		//	
+var identity = v => v;
+
+console.log(A.chain( identity ));
+
+var A = Just( 10 );
+var B = Just( 3 );
+
+function sum(x,y) { return x + y; }
+
+var C = A.map( curry( sum ) );
+
+console.log(C.inspect());
+
+var D = C.ap( B );
+
+console.log(D.inspect());
+
+var Dbis = compose( B.map, A.chain, curry )( sum );
+
+console.log(Dbis.inspect());
+
+var Maybe = { Just, Nothing, of/* aka: unit, pure */: Just };
+
+function Nothing() {
+	return { map: Nothing, chain: Nothing, ap: Nothing, inspect };
+
+	// *********************
+
+	function inspect() {
+		return "Nothing";
+	}
+}
+
+console.log(Maybe);
+
+function isEmpty(val) {
+	return val === null || val === undefined;
+}
+
+var safeProp = curry( function safeProp(prop,obj){
+	if (isEmpty( obj[prop] )) return Maybe.Nothing();
+	return Maybe.of( obj[prop] );
+} );
+
+var someObj = {"something" : {
+	"else" : {
+		"entirely" : "yep"
+	}
+}
+}
+
+Maybe.of( someObj )
+.chain( safeProp( "something" ) )
+.chain( safeProp( "else" ) )
+.chain( safeProp( "entirely" ) )
+.map( function(v){console.log (v);} );
+
+function MaybeHumble(egoLevel) {
+	// accept anything other than a number that's 42 or higher
+	return !(Number( egoLevel ) >= 42) ?
+		Maybe.of( egoLevel ) :
+		Maybe.Nothing();
+}
+
+var bob = MaybeHumble( 45 );
+var alice = MaybeHumble( 39 );
+
+function winAward(ego) {
+	return MaybeHumble( ego + 3 );
+}
+
+function winAward2(ego) {
+	return ego + 3;
+}
+
+console.log(alice.inspect());
+alice = alice.chain( winAward );
+console.log(alice.inspect());
+var alice2 = MaybeHumble( 38 );
+alice2 = alice2.map( winAward2 );
+console.log(alice2.inspect());
+
+var teamMembers = curry( function teamMembers(ego1,ego2){
+	console.log( `Our humble team's egos: ${ego1} ${ego2}` );
+} );
+
+var bob2 = MaybeHumble( 30 );
+
+bob.map( teamMembers ).ap( alice ).inspect();
+bob2.map( teamMembers ).ap( alice2 ).inspect();
+
+
+function introduction() {
+	console.log( "I'm just a learner like you! :)" );
+}
+
+var egoChange = curry( function egoChange(amount,concept,egoLevel) {
+	console.log( `${amount > 0 ? "Learned" : "Shared"} ${concept}.` );
+	return MaybeHumble( egoLevel + amount );
+} );
+
+var learn = egoChange( 3 );
+
+var learner = MaybeHumble( 35 );
+
+learner
+.chain( learn( "closures" ) )
+.chain( learn( "side effects" ) )
+.chain( learn( "recursion" ) )
+.chain( learn( "map/reduce" ) )
+.map( introduction );
+// Learned closures.
+// Learned side effects.
+// Learned recursion.
+// ..nothing else..
+
+var share = egoChange( -2 );
+
+learner
+.chain( learn( "closures" ) )
+.chain( share( "closures" ) )
+.chain( learn( "side effects" ) )
+.chain( share( "side effects" ) )
+.chain( learn( "recursion" ) )
+.chain( share( "recursion" ) )
+.chain( learn( "map/reduce" ) )
+.chain( share( "map/reduce" ) )
+.map( introduction );
+// Learned closures.
+// Shared closures.
+// Learned side effects.
+// Shared side effects.
+// Learned recursion.
+// Shared recursion.
+// Learned map/reduce.
+// Shared map/reduce.
+// I'm just a learner like you! :)
+</script>
+</html>
